@@ -5,17 +5,14 @@ function Gameboard(){
 
     for(let i=0; i<rows; i++){
         boards[i] = [];
-        for(let j=0; j<rows; j++){
+        for(let j=0; j<cols; j++){
             boards[i].push(Cell());
         }
     }
 
     const getBoard = () => boards;
-    const dropToken = (col, row, player) => {
-        if(boards[row][col].getValue()!== 0){
-            console.log("This cell is already filled.");
-            return true;
-        } 
+    const dropToken = (row, col, player) => {
+        if(boards[row][col].getValue()!== 0)return true;  
         boards[row][col].addToken(player);
         return false;
     };
@@ -71,16 +68,26 @@ function GameController(playerOneName = "Player One", playerTwoName = "Player Tw
     const playRound = (row, col) => {
         console.log(`Dropping ${getActivePlayer().name}'s token into row ${row} and column ${col}...`);
         let isFilled = boards.dropToken(row, col, getActivePlayer().token);
-
+        if(isFilled) return;
         //win logic
+        const b = boards.getBoard().map(r => r.map(c => c.getValue()));
+        const token = getActivePlayer().token;
+
+        const hasWon = 
+            b.some(r => r[0] === token && r[1] === token && r[2] === token) || 
+            [0, 1, 2].some(c => b[0][c] === token && b[1][c] === token && b[2][c] === token) ||
+            (b[0][0] === token && b[1][1] === token && b[2][2] === token) ||
+            (b[0][2] === token && b[1][1] === token && b[2][0] === token);
+
+        if(hasWon){
+            boards.printBoard();
+            console.log(`${getActivePlayer().name} Wins!`);
+            return;
+        }
 
         //switch if can droptoken
-        if(!isFilled){
-            switchPlayerTurn();
-            printNewRound();
-            isFilled = false;
-        }
-        
+        switchPlayerTurn();
+        printNewRound();
     };
     printNewRound();
 

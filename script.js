@@ -21,7 +21,6 @@ function Gameboard(){
         const boardWithCellValues = boards.map((row) =>
             row.map((cell) => cell.getValue())
         );
-        console.log(boardWithCellValues);
     };
     return { getBoard, dropToken, printBoard };
 }
@@ -38,26 +37,16 @@ function Cell(){
     return {addToken, getValue};
 }
 
-function GameController(playerOneName = "Player One", playerTwoName = "Player Two"){
+function GameController(){
     const boards = Gameboard();
 
-    const players = [
-        {
-            name: playerOneName,
-            token: "X",
-        },
-        {
-            name: playerTwoName,
-            token: "O",
-        },
-    ];
+    const players = [{token: "X",},{token: "O",},];
 
     let activePlayer = players[0];
     let winner = null;
 
     const printNewRound = () => {
         boards.printBoard();
-        console.log(`${getActivePlayer().name}'s turn.`);
     };
 
     const switchPlayerTurn = () => {
@@ -66,10 +55,14 @@ function GameController(playerOneName = "Player One", playerTwoName = "Player Tw
 
     const getActivePlayer = () => activePlayer;
     const getWinner = () => winner;
+    
+    const setPlayerNames = (name1, name2) => {
+    players[0].name = name1 || "Player 1";
+    players[1].name = name2 || "Player 2";
+    };
 
     const playRound = (row, col) => {
         if(winner) return;
-        console.log(`Dropping ${getActivePlayer().name}'s token into row ${row} and column ${col}...`);
         let isFilled = boards.dropToken(row, col, getActivePlayer().token);
         if(isFilled) return;
         //win logic
@@ -93,13 +86,26 @@ function GameController(playerOneName = "Player One", playerTwoName = "Player Tw
     };
     printNewRound();
 
-    return {playRound, getActivePlayer,getBoard: boards.getBoard, getWinner,};
+    return {playRound, getActivePlayer,getBoard: boards.getBoard, getWinner, setPlayerNames,};
 }
 
 function ScreenController(){
+    const player1Input = document.querySelector("#player1");
+    const player2Input = document.querySelector("#player2");
     const game = GameController();
     const playerTurnDiv = document.querySelector(".turn");
     const boardDiv = document.querySelector(".board");
+    const modal = document.querySelector("#myModal");
+    const closeBtn = document.querySelector("#closeBtn");
+
+    modal.showModal(); 
+    closeBtn.addEventListener("click", addNameInput);
+
+    function addNameInput(){
+        game.setPlayerNames(player1Input.value.trim(), player2Input.value.trim());
+        modal.close();
+        updateScreen();
+    }
 
     const updateScreen = () => {
         boardDiv.textContent = "";
@@ -138,6 +144,8 @@ function ScreenController(){
         game.playRound(selectedRow, selectedCol);
         updateScreen();
     }
+
+    
 
     boardDiv.addEventListener("click", clickHandlerBoard);
     updateScreen();

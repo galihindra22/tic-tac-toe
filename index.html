@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,21 @@
     <script src="script.js" defer></script>
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
 
+<body>
+    <dialog id="myModal">
+        <h1>Welcome to Tic-Tac-Toe</h1>
+        <label for="player1">Enter Player 1's name:</label>
+        <input type="text" name="player1" id="player1" required>
+        <label for="player2">Enter Player 2's name:</label>
+        <input type="text" name="player2" id="player2" required>
+        <button type="button" id="closeBtn">Close</button>
+    </dialog>
     <div class="container">
-        <h1 class="turn"></h1>
+
+        <h2 class="turn"></h2>
         <div class="board"></div>
     </div>
 </body>
+
 </html>

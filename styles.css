@@ -2,6 +2,17 @@ body{
   display: flex;
   justify-content: center;
 }
+dialog[open]{
+  width: 500px;
+  height: 500px;
+  display: grid;
+  grid-template-rows: 4fr 1fr 2fr 1fr 2fr 1fr;
+  gap: 5px;
+}
+::backdrop{
+  background-color: gray;
+  opacity: 1;
+}
 .board {
   display: grid;
   height: 500px;

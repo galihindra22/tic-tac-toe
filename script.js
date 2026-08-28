@@ -1,31 +1,29 @@
-function Gameboard(){
+function Gameboard() {
     let boards = [];
     const rows = 3;
     const cols = 3;
 
-    for(let i=0; i<rows; i++){
-        boards[i] = [];
-        for(let j=0; j<cols; j++){
-            boards[i].push(Cell());
+    const init = () => {
+        for (let i = 0; i < rows; i++) {
+            boards[i] = [];
+            for (let j = 0; j < cols; j++) {
+                boards[i].push(Cell());
+            }
         }
-    }
+    };
+    init();
 
     const getBoard = () => boards;
     const dropToken = (row, col, player) => {
-        if(boards[row][col].getValue()!== 0)return true;  
+        if (boards[row][col].getValue() !== 0) return true;
         boards[row][col].addToken(player);
         return false;
     };
-
-    const printBoard = () => {
-        const boardWithCellValues = boards.map((row) =>
-            row.map((cell) => cell.getValue())
-        );
-    };
-    return { getBoard, dropToken, printBoard };
+    const resetBoard = () => init();
+    return { getBoard, dropToken, resetBoard };
 }
 
-function Cell(){
+function Cell() {
     let value = 0;
 
     const addToken = (player) => {
@@ -34,62 +32,71 @@ function Cell(){
 
     const getValue = () => value;
 
-    return {addToken, getValue};
+    return { addToken, getValue };
 }
 
-function GameController(){
+function GameController() {
     const boards = Gameboard();
 
-    const players = [{token: "X",},{token: "O",},];
+    const players = [{ token: "X", }, { token: "O", },];
 
     let activePlayer = players[0];
     let winner = null;
 
-    const printNewRound = () => {
-        boards.printBoard();
-    };
-
     const switchPlayerTurn = () => {
-        activePlayer = activePlayer === players[0] ? players[1]:players[0];
+        activePlayer = activePlayer === players[0] ? players[1] : players[0];
     };
 
     const getActivePlayer = () => activePlayer;
     const getWinner = () => winner;
-    
+
     const setPlayerNames = (name1, name2) => {
-    players[0].name = name1 || "Player 1";
-    players[1].name = name2 || "Player 2";
+        players[0].name = name1 || "Player 1";
+        players[1].name = name2 || "Player 2";
     };
 
     const playRound = (row, col) => {
-        if(winner) return;
+        if (winner) return;
         let isFilled = boards.dropToken(row, col, getActivePlayer().token);
-        if(isFilled) return;
+        if (isFilled) return;
         //win logic
         const b = boards.getBoard().map(r => r.map(c => c.getValue()));
         const token = getActivePlayer().token;
 
-        const hasWon = 
-            b.some(r => r[0] === token && r[1] === token && r[2] === token) || 
+        const hasWon =
+            b.some(r => r[0] === token && r[1] === token && r[2] === token) ||
             [0, 1, 2].some(c => b[0][c] === token && b[1][c] === token && b[2][c] === token) ||
             (b[0][0] === token && b[1][1] === token && b[2][2] === token) ||
             (b[0][2] === token && b[1][1] === token && b[2][0] === token);
 
-        if(hasWon){
+        if (hasWon) {
             winner = getActivePlayer();
+            return;
+        }
+
+        const isBoardFull = b.every(r => r.every(val => val !== 0));
+        if (isBoardFull) {
+            winner = "tie";
             return;
         }
 
         //switch if can droptoken
         switchPlayerTurn();
-        printNewRound();
     };
-    printNewRound();
 
-    return {playRound, getActivePlayer,getBoard: boards.getBoard, getWinner, setPlayerNames,};
+    const resetGame = () => {
+        boards.resetBoard();
+        activePlayer = players[0];
+        winner = null;
+    }
+
+    return {
+        playRound, getActivePlayer, getBoard: boards.getBoard,
+        getWinner, setPlayerNames, resetGame,
+    };
 }
 
-function ScreenController(){
+function ScreenController() {
     const player1Input = document.querySelector("#player1");
     const player2Input = document.querySelector("#player2");
     const game = GameController();
@@ -97,11 +104,12 @@ function ScreenController(){
     const boardDiv = document.querySelector(".board");
     const modal = document.querySelector("#myModal");
     const closeBtn = document.querySelector("#closeBtn");
+    const resetBtn = document.querySelector("#reset")
 
-    modal.showModal(); 
+    modal.showModal();
     closeBtn.addEventListener("click", addNameInput);
 
-    function addNameInput(){
+    function addNameInput() {
         game.setPlayerNames(player1Input.value.trim(), player2Input.value.trim());
         modal.close();
         updateScreen();
@@ -114,13 +122,16 @@ function ScreenController(){
         const activePlayer = game.getActivePlayer();
         const winner = game.getWinner();
 
-        if(winner){
+        if (winner === "tie") {
+            playerTurnDiv.textContent = "A Tie!"
+        }
+        else if (winner) {
             playerTurnDiv.textContent = `${activePlayer.name} Wins!`;
         }
-        else{
+        else {
             playerTurnDiv.textContent = `${activePlayer.name}'s turn...`;
         }
-        
+
 
         board.forEach((row, rowIndex) => {
             row.forEach((cell, colIndex) => {
@@ -129,23 +140,28 @@ function ScreenController(){
 
                 cellButton.dataset.row = rowIndex;
                 cellButton.dataset.column = colIndex;
-                cellButton.textContent = cell.getValue() === 0? "": cell.getValue();
+                cellButton.textContent = cell.getValue() === 0 ? "" : cell.getValue();
                 boardDiv.appendChild(cellButton);
             });
         });
     };
 
-    function clickHandlerBoard(e){
+    function clickHandlerBoard(e) {
         const selectedCol = e.target.dataset.column;
         const selectedRow = e.target.dataset.row;
 
-        if(selectedRow === undefined || selectedCol === undefined)return;
+        if (selectedRow === undefined || selectedCol === undefined) return;
 
         game.playRound(selectedRow, selectedCol);
         updateScreen();
     }
 
-    
+    function reset() {
+        game.resetGame();
+        updateScreen();
+    }
+
+    resetBtn.addEventListener("click", reset);
 
     boardDiv.addEventListener("click", clickHandlerBoard);
     updateScreen();
